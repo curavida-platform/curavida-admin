@@ -13,21 +13,13 @@
 
     <div class="toolbar">
       <div class="search-box">
-        <input
-          v-model="search"
-          type="text"
-          placeholder="Buscar produto..."
-        />
+        <input v-model="search" type="text" placeholder="Buscar produto..." />
       </div>
 
-      <select v-model="categoryFilter">
+      <select v-model="categoryFilter" class="category-select">
         <option value="">Todas as categorias</option>
 
-        <option
-          v-for="category in categories"
-          :key="category"
-          :value="category"
-        >
+        <option v-for="category in categories" :key="category" :value="category">
           {{ category }}
         </option>
       </select>
@@ -66,18 +58,11 @@
           </thead>
 
           <tbody>
-            <tr
-              v-for="product in filteredProducts"
-              :key="product.id"
-            >
+            <tr v-for="product in filteredProducts" :key="product.id">
               <td>
                 <div class="product-name">
                   <div class="product-image">
-                    <img
-                      v-if="product.images?.length"
-                      :src="product.images[0].url"
-                      :alt="product.name"
-                    />
+                    <img v-if="product.images?.length" :src="product.images[0].url" :alt="product.name" />
 
                     <span v-else>
                       📦
@@ -114,10 +99,7 @@
               </td>
 
               <td>
-                <span
-                  class="status"
-                  :class="product.active ? 'active' : 'inactive'"
-                >
+                <span class="status" :class="product.active ? 'active' : 'inactive'">
                   {{ product.active ? 'Ativo' : 'Inativo' }}
                 </span>
               </td>
@@ -253,6 +235,9 @@ onMounted(() => {
 
 .search-box {
   flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .search-box input,
@@ -269,6 +254,46 @@ onMounted(() => {
 
 .toolbar select {
   width: 220px;
+}
+
+.category-select {
+  width: 220px;
+  height: 44px;
+  padding: 0 42px 0 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background-color: #ffffff;
+  color: #374151;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  outline: none;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background-color 0.2s ease;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  background-size: 16px;
+}
+
+.category-select:hover {
+  border-color: #16a34a;
+  background-color: #f9fafb;
+}
+
+.category-select:focus {
+  border-color: #16a34a;
+
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.12);
+}
+
+.category-select option {
+  padding: 10px;
+  color: #374151;
+  background: #ffffff;
 }
 
 .search-box input:focus,
@@ -403,7 +428,7 @@ td {
   text-align: center;
 }
 
-.empty-state > span {
+.empty-state>span {
   font-size: 36px;
 }
 
