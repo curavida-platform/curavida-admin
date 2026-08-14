@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 
 import AdminLayout from '../layouts/AdminLayout.vue'
+import CategoriesView from '../views/CategoriesView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -27,6 +28,11 @@ const router = createRouter({
           name: 'pedidos',
           component: () => import('../views/OrdersView.vue'),
         },
+        {
+          path: '/categorias',
+          name: 'categorias',
+          component: CategoriesView,
+        }
       ],
     },
   ],
