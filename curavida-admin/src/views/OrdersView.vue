@@ -1,93 +1,13 @@
-<template>
-  <div class="orders-page">
-    <div class="page-header">
-      <div>
-        <h1>Pedidos</h1>
-        <p>Gerencie os pedidos recebidos pela CuraVida.</p>
-      </div>
-    </div>
-
-    <div v-if="loading" class="state">
-      <p>Carregando pedidos...</p>
-    </div>
-
-    <div v-else-if="error" class="state error">
-      <p>{{ error }}</p>
-
-      <button @click="loadOrders">
-        Tentar novamente
-      </button>
-    </div>
-
-    <div v-else class="orders-container">
-      <div class="orders-info">
-        <span>
-          {{ orders.length }} pedido(s)
-        </span>
-      </div>
-
-      <div v-if="orders.length" class="orders-table">
-        <table>
-          <thead>
-            <tr>
-              <th>Cliente</th>
-              <th>E-mail</th>
-              <th>Telefone</th>
-              <th>Itens</th>
-              <th>Data</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            <tr
-              v-for="order in orders"
-              :key="order.id"
-            >
-              <td>
-                <strong>{{ order.customerName }}</strong>
-              </td>
-
-              <td>
-                {{ order.customerEmail || '—' }}
-              </td>
-
-              <td>
-                {{ order.customerPhone || '—' }}
-              </td>
-
-              <td>
-                {{ order.items?.length || 0 }}
-              </td>
-
-              <td>
-                {{ formatDate(order.createdAt) }}
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div v-else class="empty-state">
-        <span>📋</span>
-
-        <h3>Nenhum pedido encontrado</h3>
-
-        <p>
-          Os pedidos realizados pelos clientes aparecerão aqui.
-        </p>
-      </div>
-    </div>
-  </div>
-</template>
-
 <script setup>
 import { onMounted, ref } from 'vue'
-
 import orderService from '../services/order.service'
 
 const orders = ref([])
 const loading = ref(true)
 const error = ref('')
+
+const selectedOrder = ref(null)
+const loadingDetails = ref(false)
 
 const loadOrders = async () => {
   loading.value = true
@@ -99,17 +19,34 @@ const loadOrders = async () => {
     orders.value = response.data || []
   } catch (err) {
     console.error(err)
-
     error.value = 'Não foi possível carregar os pedidos.'
   } finally {
     loading.value = false
   }
 }
 
-const formatDate = (date) => {
-  if (!date) {
-    return '—'
+const openOrder = async (id) => {
+  loadingDetails.value = true
+  selectedOrder.value = null
+
+  try {
+    const response = await orderService.getById(id)
+
+    selectedOrder.value = response.data
+  } catch (err) {
+    console.error(err)
+    alert('Não foi possível carregar os detalhes do pedido.')
+  } finally {
+    loadingDetails.value = false
   }
+}
+
+const closeOrder = () => {
+  selectedOrder.value = null
+}
+
+const formatDate = (date) => {
+  if (!date) return '—'
 
   return new Date(date).toLocaleDateString('pt-BR', {
     day: '2-digit',
@@ -118,10 +55,367 @@ const formatDate = (date) => {
   })
 }
 
+const formatPrice = (value) => {
+  return Number(value || 0).toLocaleString('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+  })
+}
+
+const getStatusLabel = (status) => {
+  const labels = {
+    PENDING: 'Pendente',
+    APPROVED: 'Aprovado',
+    REJECTED: 'Rejeitado',
+    COMPLETED: 'Concluído',
+  }
+
+  return labels[status] || status
+}
+
+const getStatusClass = (status) => {
+  return {
+    pending: status === 'PENDING',
+    approved: status === 'APPROVED',
+    rejected: status === 'REJECTED',
+    completed: status === 'COMPLETED',
+  }
+}
+
 onMounted(() => {
   loadOrders()
 })
+
+const updatingStatus = ref(false)
+
+const updateStatus = async (status) => {
+  if (!selectedOrder.value) return
+
+  try {
+    updatingStatus.value = true
+
+    const response = await orderService.updateStatus(
+      selectedOrder.value.id,
+      status,
+    )
+
+    selectedOrder.value = response.data
+
+    await loadOrders()
+  } catch (err) {
+    console.error(err)
+
+    alert(
+      err.response?.data?.message ||
+      'Não foi possível atualizar o status.'
+    )
+  } finally {
+    updatingStatus.value = false
+  }
+}
 </script>
+
+<template>
+  <div class="orders-page">
+
+    <!-- CABEÇALHO -->
+
+    <div class="page-header">
+      <div>
+        <h1>Pedidos</h1>
+
+        <p>
+          Gerencie os pedidos recebidos pela CuraVida.
+        </p>
+      </div>
+    </div>
+
+    <!-- LOADING -->
+
+    <div v-if="loading" class="state">
+      <p>Carregando pedidos...</p>
+    </div>
+
+    <!-- ERRO -->
+
+    <div v-else-if="error" class="state error">
+      <p>{{ error }}</p>
+
+      <button @click="loadOrders">
+        Tentar novamente
+      </button>
+    </div>
+
+    <!-- PEDIDOS -->
+
+    <div v-else class="orders-container">
+
+      <div class="orders-info">
+        <span>
+          {{ orders.length }} pedido(s)
+        </span>
+      </div>
+
+      <!-- TABELA -->
+
+      <div v-if="orders.length" class="orders-table">
+
+        <table>
+
+          <thead>
+            <tr>
+              <th>Cliente</th>
+              <th>Telefone</th>
+              <th>Itens</th>
+              <th>Status</th>
+              <th>Data</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+
+          <tbody>
+
+            <tr v-for="order in orders" :key="order.id">
+
+              <td>
+                <strong>
+                  {{ order.customerName }}
+                </strong>
+              </td>
+
+              <td>
+                {{ order.customerPhone || '—' }}
+              </td>
+
+              <td>
+                {{ order.items?.length || 0 }}
+              </td>
+
+              <td>
+
+                <span class="status" :class="getStatusClass(order.status)">
+                  {{ getStatusLabel(order.status) }}
+                </span>
+
+              </td>
+
+              <td>
+                {{ formatDate(order.createdAt) }}
+              </td>
+
+              <td>
+
+                <button class="details-button" @click="openOrder(order.id)">
+                  Ver detalhes
+                </button>
+
+              </td>
+
+            </tr>
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+      <!-- VAZIO -->
+
+      <div v-else class="empty-state">
+
+        <span>📋</span>
+
+        <h3>
+          Nenhum pedido encontrado
+        </h3>
+
+        <p>
+          Os pedidos realizados pelos clientes aparecerão aqui.
+        </p>
+
+      </div>
+
+    </div>
+
+    <!-- MODAL -->
+
+    <div v-if="selectedOrder || loadingDetails" class="modal-overlay" @click.self="closeOrder">
+
+      <div class="modal">
+
+        <!-- CARREGANDO -->
+
+        <div v-if="loadingDetails" class="modal-loading">
+          Carregando pedido...
+        </div>
+
+        <!-- DETALHES -->
+
+        <template v-else-if="selectedOrder">
+
+          <div class="modal-header">
+
+            <div>
+
+              <span class="modal-label">
+                PEDIDO
+              </span>
+
+              <h2>
+                #{{ selectedOrder.id.slice(0, 8) }}
+              </h2>
+
+            </div>
+
+            <button class="close-button" @click="closeOrder">
+              ×
+            </button>
+
+          </div>
+
+          <!-- CLIENTE -->
+
+          <section class="details-section">
+
+            <h3>
+              Cliente
+            </h3>
+
+            <div class="customer-info">
+
+              <div>
+                <span>Nome</span>
+                <strong>
+                  {{ selectedOrder.customerName }}
+                </strong>
+              </div>
+
+              <div>
+                <span>Telefone</span>
+                <strong>
+                  {{ selectedOrder.customerPhone || '—' }}
+                </strong>
+              </div>
+
+              <div>
+                <span>E-mail</span>
+                <strong>
+                  {{ selectedOrder.customerEmail || '—' }}
+                </strong>
+              </div>
+
+              <div>
+                <span>Data</span>
+                <strong>
+                  {{ formatDate(selectedOrder.createdAt) }}
+                </strong>
+              </div>
+
+            </div>
+
+          </section>
+
+          <!-- STATUS -->
+
+          <section class="details-section">
+
+            <h3>
+              Status
+            </h3>
+
+            <span class="status" :class="getStatusClass(selectedOrder.status)">
+              {{ getStatusLabel(selectedOrder.status) }}
+            </span>
+
+            <div class="status-actions">
+
+              <button v-if="selectedOrder.status === 'PENDING'" class="approve-button" :disabled="updatingStatus"
+                @click="updateStatus('APPROVED')">
+                Aprovar pedido
+              </button>
+
+              <button v-if="selectedOrder.status === 'PENDING'" class="reject-button" :disabled="updatingStatus"
+                @click="updateStatus('REJECTED')">
+                Rejeitar
+              </button>
+
+              <button v-if="selectedOrder.status === 'APPROVED'" class="complete-button" :disabled="updatingStatus"
+                @click="updateStatus('COMPLETED')">
+                Marcar como concluído
+              </button>
+
+            </div>
+
+          </section>
+
+          <!-- PRODUTOS -->
+
+          <section class="details-section">
+
+            <h3>
+              Produtos
+            </h3>
+
+            <div class="products-list">
+
+              <div v-for="item in selectedOrder.items" :key="item.id" class="order-product">
+
+                <div class="product-info">
+
+                  <strong>
+                    {{ item.product.name }}
+                  </strong>
+
+                  <span>
+                    Ref: {{ item.product.reference }}
+                  </span>
+
+                </div>
+
+                <div class="product-quantity">
+                  x{{ item.quantity }}
+                </div>
+
+                <div class="product-price">
+                  {{ formatPrice(item.unitPrice) }}
+                </div>
+
+              </div>
+
+            </div>
+
+          </section>
+
+          <!-- OBSERVAÇÃO -->
+
+          <section v-if="selectedOrder.notes" class="details-section">
+
+            <h3>
+              Observação
+            </h3>
+
+            <p class="notes">
+              {{ selectedOrder.notes }}
+            </p>
+
+          </section>
+
+          <div class="modal-footer">
+
+            <button class="close-modal-button" @click="closeOrder">
+              Fechar
+            </button>
+
+          </div>
+
+        </template>
+
+      </div>
+
+    </div>
+
+  </div>
+</template>
 
 <style scoped>
 .orders-page {
@@ -187,6 +481,101 @@ td strong {
   color: #111827;
 }
 
+.details-button {
+  padding: 8px 13px;
+  border: 1px solid #d1d5db;
+  border-radius: 7px;
+  background: #ffffff;
+  color: #374151;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.details-button:hover {
+  border-color: #155c5c;
+  color: #155c5c;
+}
+
+/* STATUS */
+
+.status {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.status.pending {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.status.approved {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.status.rejected {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.status.completed {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.status-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.status-actions button {
+  padding: 9px 14px;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.approve-button {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.approve-button:hover {
+  background: #bbf7d0;
+}
+
+.reject-button {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.reject-button:hover {
+  background: #fecaca;
+}
+
+.complete-button {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.complete-button:hover {
+  background: #bfdbfe;
+}
+
+.status-actions button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ESTADOS */
+
 .state {
   display: flex;
   align-items: center;
@@ -217,7 +606,7 @@ td strong {
   text-align: center;
 }
 
-.empty-state > span {
+.empty-state>span {
   font-size: 36px;
 }
 
@@ -229,5 +618,211 @@ td strong {
 .empty-state p {
   margin: 0;
   color: #9ca3af;
+}
+
+/* MODAL */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 20px;
+
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.modal {
+  width: min(700px, 100%);
+  max-height: 90vh;
+
+  overflow-y: auto;
+
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.15);
+}
+
+.modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  padding: 24px;
+
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.modal-label {
+  color: #6b7280;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.modal-header h2 {
+  margin: 5px 0 0;
+  color: #111827;
+  font-size: 22px;
+}
+
+.close-button {
+  width: 34px;
+  height: 34px;
+
+  border: none;
+  border-radius: 50%;
+
+  background: #f3f4f6;
+
+  font-size: 22px;
+  cursor: pointer;
+}
+
+.details-section {
+  padding: 22px 24px;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.details-section h3 {
+  margin: 0 0 15px;
+  color: #374151;
+  font-size: 14px;
+}
+
+.customer-info {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+
+.customer-info div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.customer-info span {
+  color: #9ca3af;
+  font-size: 12px;
+}
+
+.customer-info strong {
+  color: #111827;
+  font-size: 14px;
+}
+
+.products-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.order-product {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 20px;
+
+  padding: 14px 0;
+
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.order-product:last-child {
+  border-bottom: none;
+}
+
+.product-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.product-info strong {
+  color: #111827;
+  font-size: 14px;
+}
+
+.product-info span {
+  color: #9ca3af;
+  font-size: 12px;
+}
+
+.product-quantity {
+  color: #6b7280;
+  font-size: 13px;
+}
+
+.product-price {
+  color: #155c5c;
+  font-weight: 600;
+}
+
+.notes {
+  margin: 0;
+  padding: 12px;
+
+  border-radius: 8px;
+
+  background: #f9fafb;
+
+  color: #4b5563;
+  line-height: 1.6;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding: 20px 24px;
+}
+
+.close-modal-button {
+  padding: 9px 18px;
+
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+
+  background: #ffffff;
+
+  color: #374151;
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+.modal-loading {
+  padding: 80px 20px;
+  text-align: center;
+  color: #6b7280;
+}
+
+/* RESPONSIVO */
+
+@media (max-width: 700px) {
+
+  .customer-info {
+    grid-template-columns: 1fr;
+  }
+
+  .order-product {
+    grid-template-columns: 1fr auto;
+  }
+
+  .product-price {
+    grid-column: 2;
+  }
+
+  .modal-overlay {
+    padding: 10px;
+  }
+
+  .modal {
+    max-height: 95vh;
+  }
+
 }
 </style>
