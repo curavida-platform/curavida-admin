@@ -1,115 +1,319 @@
 <template>
   <div class="dashboard">
+
     <div class="page-header">
       <div>
         <h1>Dashboard</h1>
-        <p>Visão geral da plataforma CuraVida.</p>
+
+        <p>
+          Visão geral da plataforma CuraVida.
+        </p>
       </div>
+
+      <button class="refresh-button" :disabled="loading" @click="loadDashboard">
+        ↻
+        Atualizar
+      </button>
     </div>
 
-    <section class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-icon">📦</div>
+    <!-- LOADING -->
 
-        <div>
-          <span>Produtos</span>
-          <strong>0</strong>
-        </div>
-      </div>
+    <div v-if="loading" class="loading-state">
+      <span>Carregando dashboard...</span>
+    </div>
 
-      <div class="stat-card">
-        <div class="stat-icon">🛒</div>
+    <!-- DASHBOARD -->
 
-        <div>
-          <span>Pedidos</span>
-          <strong>0</strong>
-        </div>
-      </div>
+    <template v-else>
 
-      <div class="stat-card">
-        <div class="stat-icon">⏳</div>
+      <!-- ESTATÍSTICAS -->
 
-        <div>
-          <span>Pendentes</span>
-          <strong>0</strong>
-        </div>
-      </div>
+      <section class="stats-grid">
 
-      <div class="stat-card">
-        <div class="stat-icon">🏷️</div>
+        <StatCard title="Produtos" :value="stats.products" icon="📦" description="Cadastrados" />
 
-        <div>
-          <span>Categorias</span>
-          <strong>0</strong>
-        </div>
-      </div>
-    </section>
+        <StatCard title="Categorias" :value="stats.categories" icon="🏷️" description="Cadastradas" />
 
-    <section class="dashboard-grid">
-      <div class="panel">
-        <div class="panel-header">
-          <div>
-            <h2>Pedidos recentes</h2>
-            <p>Últimos pedidos realizados.</p>
+        <StatCard title="Estoque baixo" :value="stats.lowStock" icon="⚠️" description="Precisam de atenção" />
+
+        <StatCard title="Destaques" :value="stats.featured" icon="⭐" description="Produtos em destaque" />
+
+      </section>
+
+      <!-- CONTEÚDO -->
+
+      <section class="dashboard-grid">
+
+        <!-- PRODUTOS -->
+
+        <div class="panel">
+
+          <div class="panel-header">
+
+            <div>
+              <h2>
+                Produtos recentes
+              </h2>
+
+              <p>
+                Últimos produtos cadastrados.
+              </p>
+            </div>
+
+            <RouterLink to="/admin/produtos">
+              Ver produtos
+            </RouterLink>
+
           </div>
 
-          <RouterLink to="/admin/pedidos">
-            Ver pedidos
-          </RouterLink>
+          <RecentProducts :products="recentProducts" />
+
         </div>
 
-        <div class="empty-state">
-          <span class="empty-icon">📋</span>
+        <!-- ACESSO RÁPIDO -->
 
-          <h3>Nenhum pedido ainda</h3>
+        <div class="panel">
 
-          <p>
-            Quando novos pedidos forem realizados,
-            eles aparecerão aqui.
-          </p>
-        </div>
-      </div>
+          <div class="panel-header">
 
-      <div class="panel">
-        <div class="panel-header">
-          <div>
-            <h2>Acesso rápido</h2>
-            <p>Atalhos administrativos.</p>
+            <div>
+              <h2>
+                Acesso rápido
+              </h2>
+
+              <p>
+                Atalhos administrativos.
+              </p>
+            </div>
+
           </div>
+
+          <QuickActions />
+
         </div>
 
-        <div class="quick-actions">
-          <RouterLink to="/admin/pedidos" class="quick-action">
-            <span>🛒</span>
+      </section>
 
-            <div>
-              <strong>Pedidos</strong>
-              <small>Gerenciar pedidos</small>
-            </div>
+      <!-- ESTOQUE -->
+
+      <section class="panel inventory-panel">
+
+        <div class="panel-header">
+
+          <div>
+            <h2>
+              Resumo do estoque
+            </h2>
+
+            <p>
+              Situação atual dos produtos cadastrados.
+            </p>
+          </div>
+
+          <RouterLink to="/admin/produtos">
+            Gerenciar estoque
           </RouterLink>
 
-          <button class="quick-action" disabled>
-            <span>📦</span>
-
-            <div>
-              <strong>Produtos</strong>
-              <small>Em breve</small>
-            </div>
-          </button>
-
-          <button class="quick-action" disabled>
-            <span>🏷️</span>
-
-            <div>
-              <strong>Categorias</strong>
-              <small>Em breve</small>
-            </div>
-          </button>
         </div>
-      </div>
-    </section>
+
+        <div class="inventory-grid">
+
+          <div class="inventory-item">
+            <span class="inventory-icon">
+              🟢
+            </span>
+
+            <div>
+              <strong>
+                {{ stats.activeProducts }}
+              </strong>
+
+              <span>
+                Produtos ativos
+              </span>
+            </div>
+          </div>
+
+          <div class="inventory-item">
+            <span class="inventory-icon">
+              ⚪
+            </span>
+
+            <div>
+              <strong>
+                {{ stats.inactiveProducts }}
+              </strong>
+
+              <span>
+                Produtos inativos
+              </span>
+            </div>
+          </div>
+
+          <div class="inventory-item">
+            <span class="inventory-icon">
+              ⚠️
+            </span>
+
+            <div>
+              <strong>
+                {{ stats.lowStock }}
+              </strong>
+
+              <span>
+                Estoque baixo
+              </span>
+            </div>
+          </div>
+
+          <div class="inventory-item">
+            <span class="inventory-icon">
+              📊
+            </span>
+
+            <div>
+              <strong>
+                {{ stats.totalStock }}
+              </strong>
+
+              <span>
+                Unidades em estoque
+              </span>
+            </div>
+          </div>
+
+        </div>
+
+      </section>
+
+    </template>
+
+    <!-- ERRO -->
+
+    <div v-if="error" class="error-state">
+      <strong>
+        Não foi possível carregar o dashboard.
+      </strong>
+
+      <p>
+        {{ error }}
+      </p>
+
+      <button @click="loadDashboard">
+        Tentar novamente
+      </button>
+    </div>
+
   </div>
 </template>
+
+<script setup>
+import { computed, onMounted, ref } from 'vue'
+
+import StatCard from '../components/cards/StatCard.vue'
+import RecentProducts from '../components/dashboard/RecentProducts.vue'
+import QuickActions from '../components/dashboard/QuickActions.vue'
+
+import productService from '../services/product.service'
+import categoryService from '../services/category.service'
+
+const products = ref([])
+const categories = ref([])
+
+const loading = ref(true)
+const error = ref('')
+
+const stats = computed(() => {
+  const activeProducts = products.value.filter(
+    product => product.active
+  )
+
+  const inactiveProducts = products.value.filter(
+    product => !product.active
+  )
+
+  const lowStock = products.value.filter(
+    product =>
+      product.active &&
+      Number(product.stock || 0) <= 5
+  )
+
+  const featured = products.value.filter(
+    product =>
+      product.active &&
+      product.featured
+  )
+
+  const totalStock = products.value.reduce(
+    (total, product) =>
+      total + Number(product.stock || 0),
+    0
+  )
+
+  return {
+    products: products.value.length,
+
+    categories: categories.value.length,
+
+    activeProducts: activeProducts.length,
+
+    inactiveProducts: inactiveProducts.length,
+
+    lowStock: lowStock.length,
+
+    featured: featured.length,
+
+    totalStock,
+  }
+})
+
+const recentProducts = computed(() => {
+  return [...products.value]
+    .sort(
+      (a, b) =>
+        new Date(b.createdAt || 0) -
+        new Date(a.createdAt || 0)
+    )
+    .slice(0, 5)
+})
+
+const loadDashboard = async () => {
+  loading.value = true
+  error.value = ''
+
+  try {
+    const [
+      productsResponse,
+      categoriesResponse,
+    ] = await Promise.all([
+      productService.getAll(),
+      categoryService.getAll(),
+    ])
+
+    products.value =
+      productsResponse.data || []
+
+    categories.value =
+      categoriesResponse.data || []
+
+  } catch (err) {
+    console.error(
+      'Erro ao carregar dashboard:',
+      err
+    )
+
+    error.value =
+      err.response?.data?.message ||
+      'Verifique se a API do CuraVida está funcionando.'
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(() => {
+  loadDashboard()
+})
+</script>
 
 <style scoped>
 .dashboard {
@@ -117,183 +321,254 @@
 }
 
 .page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap: 20px;
+
   margin-bottom: 28px;
 }
 
 .page-header h1 {
   margin: 0 0 6px;
-  font-size: 28px;
+
   color: #111827;
+
+  font-size: 28px;
 }
 
 .page-header p {
   margin: 0;
+
   color: #6b7280;
+}
+
+.refresh-button {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+
+  padding: 9px 14px;
+
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+
+  background: #ffffff;
+
+  color: #374151;
+
+  font-size: 13px;
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+.refresh-button:hover {
+  border-color: #16a34a;
+
+  color: #15803d;
+}
+
+.refresh-button:disabled {
+  opacity: 0.5;
+
+  cursor: not-allowed;
 }
 
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+
+  grid-template-columns:
+    repeat(4, 1fr);
+
   gap: 20px;
+
   margin-bottom: 24px;
-}
-
-.stat-card {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 22px;
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-}
-
-.stat-icon {
-  width: 48px;
-  height: 48px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #ecfdf5;
-  border-radius: 10px;
-  font-size: 22px;
-}
-
-.stat-card span {
-  display: block;
-  margin-bottom: 4px;
-  color: #6b7280;
-  font-size: 14px;
-}
-
-.stat-card strong {
-  display: block;
-  color: #111827;
-  font-size: 24px;
 }
 
 .dashboard-grid {
   display: grid;
-  grid-template-columns: 2fr 1fr;
+
+  grid-template-columns:
+    2fr 1fr;
+
   gap: 24px;
+
+  margin-bottom: 24px;
 }
 
 .panel {
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
   padding: 24px;
+
+  background: #ffffff;
+
+  border: 1px solid #e5e7eb;
+
+  border-radius: 12px;
 }
 
 .panel-header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
+
   gap: 20px;
-  margin-bottom: 24px;
+
+  margin-bottom: 20px;
 }
 
 .panel-header h2 {
   margin: 0 0 5px;
+
   color: #111827;
+
   font-size: 18px;
 }
 
 .panel-header p {
   margin: 0;
+
   color: #6b7280;
-  font-size: 14px;
+
+  font-size: 13px;
 }
 
 .panel-header a {
   color: #16a34a;
-  font-size: 14px;
+
+  font-size: 13px;
   font-weight: 600;
+
   text-decoration: none;
+
+  white-space: nowrap;
 }
 
-.empty-state {
-  min-height: 220px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  border: 1px dashed #d1d5db;
-  border-radius: 10px;
-  padding: 30px;
+.panel-header a:hover {
+  color: #15803d;
 }
 
-.empty-icon {
-  font-size: 32px;
-  margin-bottom: 12px;
+.inventory-panel {
+  margin-bottom: 24px;
 }
 
-.empty-state h3 {
-  margin: 0 0 6px;
-  color: #374151;
-  font-size: 16px;
-}
+.inventory-grid {
+  display: grid;
 
-.empty-state p {
-  max-width: 320px;
-  margin: 0;
-  color: #9ca3af;
-  font-size: 14px;
-  line-height: 1.5;
-}
+  grid-template-columns:
+    repeat(4, 1fr);
 
-.quick-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.quick-action {
-  width: 100%;
-  display: flex;
-  align-items: center;
   gap: 14px;
-  padding: 14px;
-  border: 1px solid #e5e7eb;
+}
+
+.inventory-item {
+  display: flex;
+  align-items: center;
+
+  gap: 12px;
+
+  padding: 16px;
+
+  border: 1px solid #f3f4f6;
+
   border-radius: 10px;
-  background: #ffffff;
-  text-decoration: none;
-  text-align: left;
-  cursor: pointer;
+
+  background: #f9fafb;
 }
 
-.quick-action:not(:disabled):hover {
-  border-color: #16a34a;
-  background: #f0fdf4;
-}
-
-.quick-action:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.quick-action > span {
+.inventory-icon {
   font-size: 20px;
 }
 
-.quick-action strong,
-.quick-action small {
+.inventory-item strong,
+.inventory-item span {
   display: block;
 }
 
-.quick-action strong {
-  color: #374151;
+.inventory-item strong {
   margin-bottom: 3px;
+
+  color: #111827;
+
+  font-size: 18px;
 }
 
-.quick-action small {
-  color: #9ca3af;
+.inventory-item div span {
+  color: #6b7280;
+
+  font-size: 12px;
 }
 
-@media (max-width: 1000px) {
+.loading-state {
+  min-height: 300px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid #e5e7eb;
+
+  border-radius: 12px;
+
+  background: #ffffff;
+
+  color: #6b7280;
+
+  font-size: 14px;
+}
+
+.error-state {
+  margin-top: 20px;
+
+  padding: 20px;
+
+  border: 1px solid #fecaca;
+
+  border-radius: 10px;
+
+  background: #fef2f2;
+
+  color: #991b1b;
+}
+
+.error-state strong {
+  display: block;
+
+  margin-bottom: 5px;
+}
+
+.error-state p {
+  margin: 0 0 14px;
+
+  color: #b91c1c;
+
+  font-size: 13px;
+}
+
+.error-state button {
+  padding: 8px 14px;
+
+  border: 1px solid #fca5a5;
+
+  border-radius: 7px;
+
+  background: #ffffff;
+
+  color: #991b1b;
+
+  cursor: pointer;
+}
+
+@media (max-width: 1100px) {
   .stats-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns:
+      repeat(2, 1fr);
+  }
+
+  .inventory-grid {
+    grid-template-columns:
+      repeat(2, 1fr);
   }
 
   .dashboard-grid {
@@ -302,8 +577,20 @@
 }
 
 @media (max-width: 600px) {
+  .page-header {
+    flex-direction: column;
+  }
+
   .stats-grid {
     grid-template-columns: 1fr;
+  }
+
+  .inventory-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .panel {
+    padding: 18px;
   }
 }
 </style>
