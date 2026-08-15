@@ -2,22 +2,22 @@
   <div class="products-page">
     <div class="page-header">
       <div>
-        <h1>Produtos</h1>
-        <p>Gerencie os produtos cadastrados na CuraVida.</p>
+        <h1>{{ t('products.title') }}</h1>
+        <p>{{ t('products.subtitle') }}</p>
       </div>
 
       <button class="primary-button" @click="openCreateModal">
-        + Novo produto
+        {{ t('products.newButton') }}
       </button>
     </div>
 
     <div class="toolbar">
       <div class="search-box">
-        <input v-model="search" type="text" placeholder="Buscar produto..." />
+        <input v-model="search" type="text" :placeholder="t('products.searchPlaceholder')" />
       </div>
 
       <select v-model="categoryFilter" class="category-select">
-        <option value="">Todas as categorias</option>
+        <option value="">{{ t('products.allCategories') }}</option>
 
         <option v-for="category in categories" :key="category" :value="category">
           {{ category }}
@@ -26,21 +26,21 @@
     </div>
 
     <div v-if="loading" class="state">
-      <p>Carregando produtos...</p>
+      <p>{{ t('products.loading') }}</p>
     </div>
 
     <div v-else-if="error" class="state error">
       <p>{{ error }}</p>
 
       <button @click="loadProducts">
-        Tentar novamente
+        {{ t('actions.retry') }}
       </button>
     </div>
 
     <div v-else class="products-container">
       <div class="products-info">
         <span>
-          {{ filteredProducts.length }} produto(s)
+          {{ t('products.count', { count: filteredProducts.length }) }}
         </span>
       </div>
 
@@ -48,18 +48,18 @@
         <table>
           <thead>
             <tr>
-              <th>Produto</th>
-              <th>Referência</th>
-              <th>Categoria</th>
-              <th>Preço</th>
-              <th>Estoque</th>
-              <th>Status</th>
+              <th>{{ t('products.table.product') }}</th>
+              <th>{{ t('products.table.reference') }}</th>
+              <th>{{ t('products.table.category') }}</th>
+              <th>{{ t('products.table.price') }}</th>
+              <th>{{ t('products.table.stock') }}</th>
+              <th>{{ t('products.table.status') }}</th>
             </tr>
           </thead>
 
           <tbody>
             <tr v-for="product in filteredProducts" :key="product.id">
-              <td>
+              <td data-label="Produto">
                 <div class="product-name">
                   <div class="product-image">
                     <img v-if="product.images?.length" :src="product.images[0].url" :alt="product.name" />
@@ -73,7 +73,7 @@
                     <strong>{{ product.name }}</strong>
 
                     <small>
-                      {{ product.brand || 'Sem marca' }}
+                      {{ product.brand || t('products.noBrand') }}
                       <span v-if="product.size">
                         · {{ product.size }}
                       </span>
@@ -82,25 +82,25 @@
                 </div>
               </td>
 
-              <td>
+              <td data-label="Referência">
                 {{ product.reference }}
               </td>
 
-              <td>
-                {{ product.category?.name || 'Sem categoria' }}
+              <td data-label="Categoria">
+                {{ product.category?.name || t('products.noCategory') }}
               </td>
 
-              <td>
+              <td data-label="Preço">
                 R$ {{ formatPrice(product.unitPrice) }}
               </td>
 
-              <td>
+              <td data-label="Estoque">
                 {{ product.stock }}
               </td>
 
-              <td>
+              <td data-label="Status">
                 <span class="status" :class="product.active ? 'active' : 'inactive'">
-                  {{ product.active ? 'Ativo' : 'Inativo' }}
+                  {{ product.active ? t('products.status.active') : t('products.status.inactive') }}
                 </span>
               </td>
             </tr>
@@ -111,13 +111,17 @@
       <div v-else class="empty-state">
         <span>📦</span>
 
-        <h3>Nenhum produto encontrado</h3>
+        <h3>{{ t('products.emptyTitle') }}</h3>
 
         <p>
-          Tente alterar sua busca ou filtro.
+          {{ t('products.emptyDesc') }}
         </p>
       </div>
     </div>
+
+    <!-- FAB -->
+
+    <button class="fab" aria-label="Novo" @click="openCreateModal">+</button>
 
     <!-- MODAL NOVO PRODUTO -->
 
@@ -127,11 +131,11 @@
         <div class="modal-header">
           <div>
             <span class="modal-label">
-              PRODUTOS
+              {{ t('nav.products') }}
             </span>
 
             <h2>
-              Novo produto
+              {{ t('products.modal.newTitle') }}
             </h2>
           </div>
 
@@ -145,35 +149,35 @@
           <div class="form-section">
 
             <h3>
-              Informações básicas
+              {{ t('products.modal.basic') }}
             </h3>
 
             <div class="form-grid">
 
               <div class="form-group">
-                <label>Nome *</label>
+                <label>{{ t('products.modal.name') }} *</label>
 
-                <input v-model="productForm.name" type="text" placeholder="Nome do produto" />
+                <input v-model="productForm.name" type="text" :placeholder="t('products.modal.namePlaceholder')" />
               </div>
 
               <div class="form-group">
-                <label>Referência *</label>
+                <label>{{ t('products.modal.reference') }} *</label>
 
-                <input v-model="productForm.reference" type="text" placeholder="Ex: PA 1723" />
+                <input v-model="productForm.reference" type="text" :placeholder="t('products.modal.referencePlaceholder')" />
               </div>
 
               <div class="form-group">
-                <label>Slug *</label>
+                <label>{{ t('products.modal.slug') }} *</label>
 
-                <input v-model="productForm.slug" type="text" placeholder="slug-do-produto" />
+                <input v-model="productForm.slug" type="text" :placeholder="t('products.modal.slugPlaceholder')" />
               </div>
 
               <div class="form-group">
-                <label>Categoria *</label>
+                <label>{{ t('products.modal.category') }} *</label>
 
                 <select v-model="productForm.categoryId">
                   <option value="">
-                    Selecione uma categoria
+                    {{ t('products.modal.selectCategory') }}
                   </option>
 
                   <option v-for="category in categories" :key="category.id" :value="category.id">
@@ -183,23 +187,23 @@
               </div>
 
               <div class="form-group">
-                <label>Marca</label>
+                <label>{{ t('products.modal.brand') }}</label>
 
-                <input v-model="productForm.brand" type="text" placeholder="Ex: M-TEC" />
+                <input v-model="productForm.brand" type="text" :placeholder="t('products.modal.brandPlaceholder')" />
               </div>
 
               <div class="form-group">
-                <label>Tamanho</label>
+                <label>{{ t('products.modal.size') }}</label>
 
-                <input v-model="productForm.size" type="text" placeholder="Ex: 10x10 cm" />
+                <input v-model="productForm.size" type="text" :placeholder="t('products.modal.sizePlaceholder')" />
               </div>
 
             </div>
 
             <div class="form-group">
-              <label>Descrição</label>
+              <label>{{ t('products.modal.description') }}</label>
 
-              <textarea v-model="productForm.description" rows="4" placeholder="Descrição do produto..."></textarea>
+              <textarea v-model="productForm.description" rows="4" :placeholder="t('products.modal.descriptionPlaceholder')"></textarea>
             </div>
 
           </div>
@@ -207,31 +211,31 @@
           <div class="form-section">
 
             <h3>
-              Informações comerciais
+              {{ t('products.modal.commercial') }}
             </h3>
 
             <div class="form-grid">
 
               <div class="form-group">
-                <label>Quantidade por caixa</label>
+                <label>{{ t('products.modal.quantityPerBox') }}</label>
 
                 <input v-model="productForm.quantityPerBox" type="number" min="0" placeholder="Ex: 10" />
               </div>
 
               <div class="form-group">
-                <label>Estoque</label>
+                <label>{{ t('products.modal.stock') }}</label>
 
                 <input v-model="productForm.stock" type="number" min="0" placeholder="0" />
               </div>
 
               <div class="form-group">
-                <label>Preço unitário *</label>
+                <label>{{ t('products.modal.unitPrice') }} *</label>
 
                 <input v-model="productForm.unitPrice" type="number" min="0" step="0.01" placeholder="29.00" />
               </div>
 
               <div class="form-group">
-                <label>Preço da caixa</label>
+                <label>{{ t('products.modal.boxPrice') }}</label>
 
                 <input v-model="productForm.boxPrice" type="number" min="0" step="0.01" placeholder="290.00" />
               </div>
@@ -243,7 +247,7 @@
               <input v-model="productForm.featured" type="checkbox" />
 
               <span>
-                Produto em destaque
+                {{ t('products.modal.featured') }}
               </span>
 
             </label>
@@ -257,13 +261,13 @@
           <div class="modal-footer">
 
             <button type="button" class="cancel-button" :disabled="creatingProduct" @click="closeCreateModal">
-              Cancelar
+              {{ t('actions.cancel') }}
             </button>
 
             <button type="submit" class="save-button" :disabled="creatingProduct">
               {{ creatingProduct
-                ? 'Cadastrando...'
-                : 'Cadastrar produto'
+                ? t('products.modal.saving')
+                : t('products.modal.save')
               }}
             </button>
 
@@ -281,6 +285,8 @@ import { computed, onMounted, ref } from 'vue'
 
 import productService from '../services/product.service'
 import categoryService from '../services/category.service'
+
+import { t } from '../i18n'
 
 const products = ref([])
 const loading = ref(true)
@@ -357,7 +363,7 @@ const createProduct = async () => {
     !productForm.value.categoryId
   ) {
     createError.value =
-      'Preencha os campos obrigatórios.'
+      t('products.modal.required')
 
     return
   }
@@ -401,7 +407,7 @@ const createProduct = async () => {
 
     createError.value =
       err.response?.data?.message ||
-      'Não foi possível cadastrar o produto.'
+      t('products.modal.error')
 
   } finally {
     creatingProduct.value = false
@@ -420,7 +426,7 @@ const loadProducts = async () => {
     console.error(err)
 
     error.value =
-      'Não foi possível carregar os produtos.'
+      t('products.error')
   } finally {
     loading.value = false
   }
@@ -460,6 +466,11 @@ onMounted(() => {
 <style scoped>
 .products-page {
   width: 100%;
+  max-width: 100%;
+}
+
+.fab {
+  display: none;
 }
 
 .page-header {
@@ -925,6 +936,99 @@ td {
     flex-direction: column;
   }
 
+  .products-info {
+    padding: 12px 16px;
+  }
+
+  .products-table {
+    overflow: visible;
+  }
+
+  .products-table table,
+  .products-table thead,
+  .products-table tbody {
+    display: block;
+    width: 100%;
+  }
+
+  .products-table thead {
+    display: none;
+  }
+
+  .products-table tr {
+    display: grid;
+    grid-template-columns: 1fr;
+    min-width: 0;
+    width: 100%;
+    gap: 12px;
+    padding: 14px 16px;
+    border-top: 1px solid #e5e7eb;
+    border-radius: 0;
+  }
+
+  .products-table td {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 0;
+    border-top: none;
+    text-align: right;
+    min-width: 0;
+  }
+
+  .products-table td[data-label]::before {
+    content: attr(data-label);
+    font-size: 12px;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    flex-shrink: 0;
+  }
+
+  .products-table td > * {
+    min-width: 0;
+  }
+
+  .products-table .product-name {
+    justify-content: flex-start;
+    text-align: left;
+    min-width: 0;
+  }
+
+  .products-table .product-name small {
+    white-space: normal;
+  }
+
+  .page-header .primary-button {
+    display: none;
+  }
+
+  .fab {
+    position: fixed;
+    right: 20px;
+    bottom: calc(84px + env(safe-area-inset-bottom, 0));
+    z-index: 300;
+    width: 56px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 50%;
+    background: #16a34a;
+    color: #ffffff;
+    font-size: 28px;
+    font-weight: 600;
+    line-height: 1;
+    cursor: pointer;
+    box-shadow: 0 6px 18px rgba(22, 163, 74, 0.35);
+  }
+
+  .fab:hover {
+    background: #15803d;
+  }
+
   .toolbar {
     flex-direction: column;
   }
@@ -935,6 +1039,36 @@ td {
 
   .form-grid {
     grid-template-columns: 1fr;
+  }
+
+  .modal-overlay {
+    padding: 0;
+    align-items: stretch;
+  }
+
+  .modal {
+    width: 100%;
+    max-height: none;
+    height: 100vh;
+    border-radius: 0;
+  }
+
+  .modal-header {
+    padding: 18px;
+  }
+
+  .form-section {
+    padding: 18px;
+  }
+
+  .modal-footer {
+    padding: 16px 18px;
+    flex-direction: column-reverse;
+  }
+
+  .cancel-button,
+  .save-button {
+    width: 100%;
   }
 }
 </style>

@@ -5,10 +5,10 @@
                      <span class="icon">📦</span>
 
                      <div>
-                            <strong>Produtos</strong>
+                            <strong>{{ t('nav.products') }}</strong>
 
                             <small>
-                                   Gerenciar produtos
+                                   {{ t('dashboard.quick.manageProducts') }}
                             </small>
                      </div>
               </RouterLink>
@@ -17,10 +17,10 @@
                      <span class="icon">🏷️</span>
 
                      <div>
-                            <strong>Categorias</strong>
+                            <strong>{{ t('nav.categories') }}</strong>
 
                             <small>
-                                   Gerenciar categorias
+                                   {{ t('dashboard.quick.manageCategories') }}
                             </small>
                      </div>
               </RouterLink>
@@ -29,16 +29,20 @@
                      <span class="icon">🛒</span>
 
                      <div>
-                            <strong>Pedidos</strong>
+                            <strong>{{ t('nav.orders') }}</strong>
 
                             <small>
-                                   Gerenciar pedidos
+                                   {{ t('dashboard.quick.manageOrders') }}
                             </small>
                      </div>
               </RouterLink>
 
        </div>
 </template>
+
+<script setup>
+import { t } from '../../i18n'
+</script>
 
 <style scoped>
 .quick-actions {

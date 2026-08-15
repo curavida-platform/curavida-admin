@@ -17,7 +17,7 @@
                                    </strong>
 
                                    <span>
-                                          {{ product.category?.name || 'Sem categoria' }}
+                                          {{ product.category?.name || t('products.noCategory') }}
                                    </span>
                             </div>
 
@@ -31,16 +31,18 @@
               <div v-else class="empty-state">
                      <span>📦</span>
 
-                     <strong>Nenhum produto cadastrado</strong>
+                     <strong>{{ t('dashboard.noProducts') }}</strong>
 
                      <p>
-                            Os produtos cadastrados aparecerão aqui.
+                            {{ t('dashboard.noProductsDesc') }}
                      </p>
               </div>
        </div>
 </template>
 
 <script setup>
+import { t } from '../../i18n'
+
 defineProps({
        products: {
               type: Array,

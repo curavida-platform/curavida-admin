@@ -2,6 +2,8 @@
 import { onMounted, ref } from 'vue'
 import categoryService from '../services/category.service'
 
+import { t } from '../i18n'
+
 const categories = ref([])
 const loading = ref(true)
 const error = ref('')
@@ -26,7 +28,7 @@ const loadCategories = async () => {
               categories.value = response.data || []
        } catch (err) {
               console.error(err)
-              error.value = 'Não foi possível carregar as categorias.'
+              error.value = t('categories.error')
        } finally {
               loading.value = false
        }
@@ -65,7 +67,7 @@ const closeModal = () => {
 
 const saveCategory = async () => {
        if (!form.value.name.trim()) {
-              alert('Informe o nome da categoria.')
+              alert(t('categories.modal.nameRequired'))
               return
        }
 
@@ -95,7 +97,7 @@ const saveCategory = async () => {
               alert(
                      err.response?.data?.message ||
                      err.message ||
-                     'Não foi possível salvar a categoria.',
+                     t('categories.modal.saveError'),
               )
        } finally {
               saving.value = false
@@ -104,11 +106,11 @@ const saveCategory = async () => {
 
 const toggleStatus = async (category) => {
        const action = category.active
-              ? 'desativar'
-              : 'ativar'
+              ? 'deactivate'
+              : 'activate'
 
        const confirmed = confirm(
-              `Deseja realmente ${action} a categoria "${category.name}"?`,
+              t(`categories.modal.${action}Confirm`, { name: category.name }),
        )
 
        if (!confirmed) return
@@ -125,14 +127,14 @@ const toggleStatus = async (category) => {
 
               alert(
                      err.response?.data?.message ||
-                     'Não foi possível atualizar o status.',
+                     t('categories.modal.statusError'),
               )
        }
 }
 
 const deleteCategory = async (category) => {
        const confirmed = confirm(
-              `Deseja excluir a categoria "${category.name}"?`,
+              t('categories.modal.deleteConfirm', { name: category.name }),
        )
 
        if (!confirmed) return
@@ -146,7 +148,7 @@ const deleteCategory = async (category) => {
 
               alert(
                      err.response?.data?.message ||
-                     'Não foi possível excluir a categoria.',
+                     t('categories.modal.deleteError'),
               )
        }
 }
@@ -164,15 +166,15 @@ onMounted(() => {
               <div class="page-header">
 
                      <div>
-                            <h1>Categorias</h1>
+                            <h1>{{ t('categories.title') }}</h1>
 
                             <p>
-                                   Organize os produtos da CuraVida por categorias.
+                                   {{ t('categories.subtitle') }}
                             </p>
                      </div>
 
                      <button class="create-button" @click="openCreateModal">
-                            + Nova categoria
+                            {{ t('categories.newButton') }}
                      </button>
 
               </div>
@@ -180,7 +182,7 @@ onMounted(() => {
               <!-- LOADING -->
 
               <div v-if="loading" class="state">
-                     <p>Carregando categorias...</p>
+                     <p>{{ t('categories.loading') }}</p>
               </div>
 
               <!-- ERRO -->
@@ -189,7 +191,7 @@ onMounted(() => {
                      <p>{{ error }}</p>
 
                      <button @click="loadCategories">
-                            Tentar novamente
+                            {{ t('actions.retry') }}
                      </button>
               </div>
 
@@ -199,7 +201,7 @@ onMounted(() => {
 
                      <div class="categories-info">
                             <span>
-                                   {{ categories.length }} categoria(s)
+                                   {{ t('categories.count', { count: categories.length }) }}
                             </span>
                      </div>
 
@@ -209,15 +211,15 @@ onMounted(() => {
 
                             <table>
 
-                                   <thead>
-                                          <tr>
-                                                 <th>Categoria</th>
-                                                 <th>Descrição</th>
-                                                 <th>Produtos</th>
-                                                 <th>Status</th>
-                                                 <th>Ações</th>
-                                          </tr>
-                                   </thead>
+<thead>
+                                           <tr>
+                                                  <th>{{ t('categories.table.category') }}</th>
+                                                  <th>{{ t('categories.table.description') }}</th>
+                                                  <th>{{ t('categories.table.products') }}</th>
+                                                  <th>{{ t('categories.table.status') }}</th>
+                                                  <th>{{ t('categories.table.actions') }}</th>
+                                           </tr>
+                                    </thead>
 
                                    <tbody>
 
@@ -225,7 +227,7 @@ onMounted(() => {
 
                                                  <!-- CATEGORIA -->
 
-                                                 <td>
+                                                 <td data-label="Categoria">
 
                                                         <div class="category-name">
 
@@ -249,7 +251,7 @@ onMounted(() => {
 
                                                  <!-- DESCRIÇÃO -->
 
-                                                 <td>
+                                                 <td data-label="Descrição">
                                                         <span class="description">
                                                                {{ category.description || '—' }}
                                                         </span>
@@ -257,7 +259,7 @@ onMounted(() => {
 
                                                  <!-- PRODUTOS -->
 
-                                                 <td>
+                                                 <td data-label="Produtos">
 
                                                         <span class="product-count">
                                                                {{ category._count?.products || 0 }}
@@ -267,37 +269,37 @@ onMounted(() => {
 
                                                  <!-- STATUS -->
 
-                                                 <td>
+                                                 <td data-label="Status">
 
                                                         <span class="status" :class="{
                                                                active: category.active,
                                                                inactive: !category.active,
                                                         }">
-                                                               {{ category.active ? 'Ativa' : 'Inativa' }}
+                                                               {{ category.active ? t('categories.status.active') : t('categories.status.inactive') }}
                                                         </span>
 
                                                  </td>
 
                                                  <!-- AÇÕES -->
 
-                                                 <td>
+                                                 <td data-label="Ações">
 
                                                         <div class="actions">
 
                                                                <button class="edit-button"
                                                                       @click="openEditModal(category)">
-                                                                      Editar
+                                                                      {{ t('categories.actions.edit') }}
                                                                </button>
 
                                                                <button class="status-button"
                                                                       @click="toggleStatus(category)">
-                                                                      {{ category.active ? 'Desativar' : 'Ativar' }}
+                                                                      {{ category.active ? t('categories.actions.deactivate') : t('categories.actions.activate') }}
                                                                </button>
 
                                                                <button v-if="!category._count?.products"
                                                                       class="delete-button"
                                                                       @click="deleteCategory(category)">
-                                                                      Excluir
+                                                                      {{ t('categories.actions.delete') }}
                                                                </button>
 
                                                         </div>
@@ -319,20 +321,24 @@ onMounted(() => {
                             <span>📂</span>
 
                             <h3>
-                                   Nenhuma categoria encontrada
+                                   {{ t('categories.emptyTitle') }}
                             </h3>
 
                             <p>
-                                   Crie sua primeira categoria para organizar os produtos.
+                                   {{ t('categories.emptyDesc') }}
                             </p>
 
                             <button class="create-empty-button" @click="openCreateModal">
-                                   Criar categoria
+                                   {{ t('categories.createEmpty') }}
                             </button>
 
                      </div>
 
               </div>
+
+              <!-- FAB -->
+
+              <button class="fab" aria-label="Novo" @click="openCreateModal">+</button>
 
               <!-- MODAL -->
 
@@ -346,13 +352,13 @@ onMounted(() => {
 
                                    <div>
                                           <span class="modal-label">
-                                                 {{ editingCategory ? 'EDITAR' : 'NOVA' }}
+                                                 {{ editingCategory ? t('categories.modal.editLabel') : t('categories.modal.newLabel') }}
                                           </span>
 
                                           <h2>
                                                  {{ editingCategory
-                                                        ? 'Editar categoria'
-                                                 : 'Nova categoria'
+                                                        ? t('categories.modal.editTitle')
+                                                 : t('categories.modal.newTitle')
                                                  }}
                                           </h2>
                                    </div>
@@ -370,10 +376,10 @@ onMounted(() => {
                                    <div class="form-group">
 
                                           <label>
-                                                 Nome
+                                                 {{ t('categories.modal.name') }}
                                           </label>
 
-                                          <input v-model="form.name" type="text" placeholder="Ex: Curativos"
+                                          <input v-model="form.name" type="text" :placeholder="t('categories.modal.namePlaceholder')"
                                                  maxlength="100" required />
 
                                    </div>
@@ -381,10 +387,10 @@ onMounted(() => {
                                    <div class="form-group">
 
                                           <label>
-                                                 Descrição
+                                                 {{ t('categories.modal.description') }}
                                           </label>
 
-                                          <textarea v-model="form.description" placeholder="Descrição da categoria..."
+                                          <textarea v-model="form.description" :placeholder="t('categories.modal.descriptionPlaceholder')"
                                                  rows="4"></textarea>
 
                                    </div>
@@ -392,13 +398,13 @@ onMounted(() => {
                                    <div class="form-group">
 
                                           <label>
-                                                 Ícone
+                                                 {{ t('categories.modal.icon') }}
                                           </label>
 
-                                          <input v-model="form.icon" type="text" placeholder="Ex: 🩹" maxlength="50" />
+                                          <input v-model="form.icon" type="text" :placeholder="t('categories.modal.iconPlaceholder')" maxlength="50" />
 
                                           <span class="form-help">
-                                                 Você pode usar um emoji ou outro identificador.
+                                                 {{ t('categories.modal.iconHelp') }}
                                           </span>
 
                                    </div>
@@ -409,15 +415,15 @@ onMounted(() => {
 
                                           <button type="button" class="cancel-button" :disabled="saving"
                                                  @click="closeModal">
-                                                 Cancelar
+                                                 {{ t('actions.cancel') }}
                                           </button>
 
                                           <button type="submit" class="save-button" :disabled="saving">
                                                  {{ saving
-                                                        ? 'Salvando...'
+                                                        ? t('categories.modal.saving')
                                                         : editingCategory
-                                                 ? 'Salvar alterações'
-                                                 : 'Criar categoria'
+                                                 ? t('categories.modal.saveEdit')
+                                                 : t('categories.modal.saveCreate')
                                                  }}
                                           </button>
 
@@ -435,6 +441,11 @@ onMounted(() => {
 <style scoped>
 .categories-page {
        width: 100%;
+       max-width: 100%;
+}
+
+.fab {
+       display: none;
 }
 
 /* CABEÇALHO */
@@ -463,7 +474,7 @@ onMounted(() => {
        padding: 10px 16px;
        border: none;
        border-radius: 8px;
-       background: #155c5c;
+       background: #16a34a;
        color: #ffffff;
        font-size: 14px;
        font-weight: 600;
@@ -472,7 +483,7 @@ onMounted(() => {
 
 .create-button:hover,
 .create-empty-button:hover {
-       background: #104949;
+       background: #15803d;
 }
 
 /* CONTAINER */
@@ -568,7 +579,7 @@ td strong {
 
 .product-count {
        font-weight: 600;
-       color: #155c5c;
+       color: #16a34a;
 }
 
 /* STATUS */
@@ -614,8 +625,8 @@ td strong {
 }
 
 .edit-button:hover {
-       border-color: #155c5c;
-       color: #155c5c;
+       border-color: #16a34a;
+       color: #16a34a;
 }
 
 .status-button {
@@ -625,8 +636,8 @@ td strong {
 }
 
 .status-button:hover {
-       border-color: #155c5c;
-       color: #155c5c;
+       border-color: #16a34a;
+       color: #16a34a;
 }
 
 .delete-button {
@@ -807,7 +818,7 @@ td strong {
 
 .form-group input:focus,
 .form-group textarea:focus {
-       border-color: #155c5c;
+       border-color: #16a34a;
 }
 
 .form-help {
@@ -848,12 +859,12 @@ td strong {
 
 .save-button {
        border: none;
-       background: #155c5c;
+       background: #16a34a;
        color: #ffffff;
 }
 
 .save-button:hover {
-       background: #104949;
+       background: #15803d;
 }
 
 .cancel-button:disabled,
@@ -870,9 +881,82 @@ td strong {
               flex-direction: column;
        }
 
+       .create-button {
+              align-self: flex-start;
+       }
+
        .actions {
               flex-wrap: wrap;
        }
+
+       .categories-info {
+              padding: 12px 16px;
+       }
+
+       .categories-table {
+              overflow: visible;
+       }
+
+       .categories-table table,
+       .categories-table thead,
+       .categories-table tbody {
+              display: block;
+              width: 100%;
+       }
+
+       .categories-table thead {
+              display: none;
+       }
+
+.categories-table tr {
+       display: grid;
+       grid-template-columns: 1fr;
+       min-width: 0;
+       width: 100%;
+       gap: 12px;
+       padding: 16px;
+       border-top: 1px solid #e5e7eb;
+}
+
+.categories-table td {
+       display: flex;
+       align-items: center;
+       justify-content: space-between;
+       gap: 12px;
+       padding: 0;
+       border-top: none;
+       text-align: right;
+       min-width: 0;
+}
+
+.categories-table td[data-label]::before {
+       content: attr(data-label);
+       font-size: 12px;
+       font-weight: 600;
+       color: #6b7280;
+       text-transform: uppercase;
+       flex-shrink: 0;
+}
+
+.categories-table td > * {
+       min-width: 0;
+}
+
+.categories-table .description {
+       max-width: none;
+       white-space: normal;
+       text-align: right;
+}
+
+.categories-table .category-name {
+       justify-content: flex-start;
+       text-align: left;
+}
+
+.categories-table .actions {
+       justify-content: flex-end;
+       min-width: 0;
+}
 
 }
 
@@ -886,12 +970,62 @@ td strong {
               width: 100%;
        }
 
+       .page-header .create-button {
+              display: none;
+       }
+
+.fab {
+       position: fixed;
+       right: 20px;
+       bottom: calc(84px + env(safe-area-inset-bottom, 0));
+       z-index: 300;
+       width: 56px;
+       height: 56px;
+       display: flex;
+       align-items: center;
+       justify-content: center;
+       border: none;
+       border-radius: 50%;
+       background: #16a34a;
+       color: #ffffff;
+       font-size: 28px;
+       font-weight: 600;
+       line-height: 1;
+       cursor: pointer;
+       box-shadow: 0 6px 18px rgba(22, 163, 74, 0.35);
+}
+
+       .fab:hover {
+              background: #15803d;
+       }
+
        .modal-overlay {
-              padding: 10px;
+              padding: 0;
+              align-items: stretch;
        }
 
        .modal {
-              max-height: 95vh;
+              width: 100%;
+              height: 100vh;
+              max-height: none;
+              border-radius: 0;
+       }
+
+       .modal-header {
+              padding: 18px;
+       }
+
+       .category-form {
+              padding: 18px;
+       }
+
+       .modal-footer {
+              flex-direction: column-reverse;
+       }
+
+       .cancel-button,
+       .save-button {
+              width: 100%;
        }
 
 }

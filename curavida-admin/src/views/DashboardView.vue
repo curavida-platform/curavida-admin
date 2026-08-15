@@ -3,23 +3,23 @@
 
     <div class="page-header">
       <div>
-        <h1>Dashboard</h1>
+        <h1>{{ t('dashboard.title') }}</h1>
 
         <p>
-          Visão geral da plataforma CuraVida.
+          {{ t('dashboard.subtitle') }}
         </p>
       </div>
 
       <button class="refresh-button" :disabled="loading" @click="loadDashboard">
         ↻
-        Atualizar
+        {{ t('actions.refresh') }}
       </button>
     </div>
 
     <!-- LOADING -->
 
     <div v-if="loading" class="loading-state">
-      <span>Carregando dashboard...</span>
+      <span>{{ t('dashboard.loading') }}</span>
     </div>
 
     <!-- DASHBOARD -->
@@ -30,13 +30,13 @@
 
       <section class="stats-grid">
 
-        <StatCard title="Produtos" :value="stats.products" icon="📦" description="Cadastrados" />
+        <StatCard :title="t('dashboard.stats.products')" :value="stats.products" icon="📦" :description="t('dashboard.stats.productsDesc')" />
 
-        <StatCard title="Categorias" :value="stats.categories" icon="🏷️" description="Cadastradas" />
+        <StatCard :title="t('dashboard.stats.categories')" :value="stats.categories" icon="🏷️" :description="t('dashboard.stats.categoriesDesc')" />
 
-        <StatCard title="Estoque baixo" :value="stats.lowStock" icon="⚠️" description="Precisam de atenção" />
+        <StatCard :title="t('dashboard.stats.lowStock')" :value="stats.lowStock" icon="⚠️" :description="t('dashboard.stats.lowStockDesc')" />
 
-        <StatCard title="Destaques" :value="stats.featured" icon="⭐" description="Produtos em destaque" />
+        <StatCard :title="t('dashboard.stats.featured')" :value="stats.featured" icon="⭐" :description="t('dashboard.stats.featuredDesc')" />
 
       </section>
 
@@ -52,16 +52,16 @@
 
             <div>
               <h2>
-                Produtos recentes
+                {{ t('dashboard.recentProducts') }}
               </h2>
 
               <p>
-                Últimos produtos cadastrados.
+                {{ t('dashboard.recentProductsDesc') }}
               </p>
             </div>
 
-            <RouterLink to="/admin/produtos">
-              Ver produtos
+            <RouterLink to="/produtos">
+              {{ t('actions.viewAll') }}
             </RouterLink>
 
           </div>
@@ -78,11 +78,11 @@
 
             <div>
               <h2>
-                Acesso rápido
+                {{ t('dashboard.quickAccess') }}
               </h2>
 
               <p>
-                Atalhos administrativos.
+                {{ t('dashboard.quickAccessDesc') }}
               </p>
             </div>
 
@@ -102,16 +102,16 @@
 
           <div>
             <h2>
-              Resumo do estoque
+              {{ t('dashboard.inventory') }}
             </h2>
 
             <p>
-              Situação atual dos produtos cadastrados.
+              {{ t('dashboard.inventoryDesc') }}
             </p>
           </div>
 
-          <RouterLink to="/admin/produtos">
-            Gerenciar estoque
+          <RouterLink to="/produtos">
+            {{ t('actions.manageStock') }}
           </RouterLink>
 
         </div>
@@ -129,7 +129,7 @@
               </strong>
 
               <span>
-                Produtos ativos
+                {{ t('dashboard.inventoryItems.active') }}
               </span>
             </div>
           </div>
@@ -145,7 +145,7 @@
               </strong>
 
               <span>
-                Produtos inativos
+                {{ t('dashboard.inventoryItems.inactive') }}
               </span>
             </div>
           </div>
@@ -161,7 +161,7 @@
               </strong>
 
               <span>
-                Estoque baixo
+                {{ t('dashboard.inventoryItems.lowStock') }}
               </span>
             </div>
           </div>
@@ -177,7 +177,7 @@
               </strong>
 
               <span>
-                Unidades em estoque
+                {{ t('dashboard.inventoryItems.totalStock') }}
               </span>
             </div>
           </div>
@@ -192,7 +192,7 @@
 
     <div v-if="error" class="error-state">
       <strong>
-        Não foi possível carregar o dashboard.
+        {{ t('dashboard.error') }}
       </strong>
 
       <p>
@@ -200,7 +200,7 @@
       </p>
 
       <button @click="loadDashboard">
-        Tentar novamente
+        {{ t('actions.retry') }}
       </button>
     </div>
 
@@ -216,6 +216,8 @@ import QuickActions from '../components/dashboard/QuickActions.vue'
 
 import productService from '../services/product.service'
 import categoryService from '../services/category.service'
+
+import { t } from '../i18n'
 
 const products = ref([])
 const categories = ref([])
@@ -318,6 +320,7 @@ onMounted(() => {
 <style scoped>
 .dashboard {
   width: 100%;
+  max-width: 100%;
 }
 
 .page-header {
@@ -385,6 +388,12 @@ onMounted(() => {
   gap: 20px;
 
   margin-bottom: 24px;
+}
+
+.stats-grid > *,
+.dashboard-grid > *,
+.inventory-grid > * {
+  min-width: 0;
 }
 
 .dashboard-grid {

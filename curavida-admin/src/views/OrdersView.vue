@@ -2,6 +2,8 @@
 import { onMounted, ref } from 'vue'
 import orderService from '../services/order.service'
 
+import { t } from '../i18n'
+
 const orders = ref([])
 const loading = ref(true)
 const error = ref('')
@@ -19,7 +21,7 @@ const loadOrders = async () => {
     orders.value = response.data || []
   } catch (err) {
     console.error(err)
-    error.value = 'Não foi possível carregar os pedidos.'
+    error.value = t('orders.error')
   } finally {
     loading.value = false
   }
@@ -35,7 +37,7 @@ const openOrder = async (id) => {
     selectedOrder.value = response.data
   } catch (err) {
     console.error(err)
-    alert('Não foi possível carregar os detalhes do pedido.')
+    alert(t('orders.details.detailsError'))
   } finally {
     loadingDetails.value = false
   }
@@ -64,10 +66,10 @@ const formatPrice = (value) => {
 
 const getStatusLabel = (status) => {
   const labels = {
-    PENDING: 'Pendente',
-    APPROVED: 'Aprovado',
-    REJECTED: 'Rejeitado',
-    COMPLETED: 'Concluído',
+    PENDING: t('orders.status.PENDING'),
+    APPROVED: t('orders.status.APPROVED'),
+    REJECTED: t('orders.status.REJECTED'),
+    COMPLETED: t('orders.status.COMPLETED'),
   }
 
   return labels[status] || status
@@ -107,7 +109,7 @@ const updateStatus = async (status) => {
 
     alert(
       err.response?.data?.message ||
-      'Não foi possível atualizar o status.'
+      t('orders.details.statusError')
     )
   } finally {
     updatingStatus.value = false
@@ -122,10 +124,10 @@ const updateStatus = async (status) => {
 
     <div class="page-header">
       <div>
-        <h1>Pedidos</h1>
+        <h1>{{ t('orders.title') }}</h1>
 
         <p>
-          Gerencie os pedidos recebidos pela CuraVida.
+          {{ t('orders.subtitle') }}
         </p>
       </div>
     </div>
@@ -133,7 +135,7 @@ const updateStatus = async (status) => {
     <!-- LOADING -->
 
     <div v-if="loading" class="state">
-      <p>Carregando pedidos...</p>
+      <p>{{ t('orders.loading') }}</p>
     </div>
 
     <!-- ERRO -->
@@ -142,7 +144,7 @@ const updateStatus = async (status) => {
       <p>{{ error }}</p>
 
       <button @click="loadOrders">
-        Tentar novamente
+        {{ t('actions.retry') }}
       </button>
     </div>
 
@@ -152,7 +154,7 @@ const updateStatus = async (status) => {
 
       <div class="orders-info">
         <span>
-          {{ orders.length }} pedido(s)
+          {{ t('orders.count', { count: orders.length }) }}
         </span>
       </div>
 
@@ -164,12 +166,12 @@ const updateStatus = async (status) => {
 
           <thead>
             <tr>
-              <th>Cliente</th>
-              <th>Telefone</th>
-              <th>Itens</th>
-              <th>Status</th>
-              <th>Data</th>
-              <th>Ações</th>
+              <th>{{ t('orders.table.customer') }}</th>
+              <th>{{ t('orders.table.phone') }}</th>
+              <th>{{ t('orders.table.items') }}</th>
+              <th>{{ t('orders.table.status') }}</th>
+              <th>{{ t('orders.table.date') }}</th>
+              <th>{{ t('orders.table.actions') }}</th>
             </tr>
           </thead>
 
@@ -177,21 +179,21 @@ const updateStatus = async (status) => {
 
             <tr v-for="order in orders" :key="order.id">
 
-              <td>
+              <td data-label="Cliente">
                 <strong>
                   {{ order.customerName }}
                 </strong>
               </td>
 
-              <td>
+              <td data-label="Telefone">
                 {{ order.customerPhone || '—' }}
               </td>
 
-              <td>
+              <td data-label="Itens">
                 {{ order.items?.length || 0 }}
               </td>
 
-              <td>
+              <td data-label="Status">
 
                 <span class="status" :class="getStatusClass(order.status)">
                   {{ getStatusLabel(order.status) }}
@@ -199,14 +201,14 @@ const updateStatus = async (status) => {
 
               </td>
 
-              <td>
+              <td data-label="Data">
                 {{ formatDate(order.createdAt) }}
               </td>
 
-              <td>
+              <td data-label="Ações">
 
                 <button class="details-button" @click="openOrder(order.id)">
-                  Ver detalhes
+                  {{ t('actions.details') }}
                 </button>
 
               </td>
@@ -226,11 +228,11 @@ const updateStatus = async (status) => {
         <span>📋</span>
 
         <h3>
-          Nenhum pedido encontrado
+          {{ t('orders.emptyTitle') }}
         </h3>
 
         <p>
-          Os pedidos realizados pelos clientes aparecerão aqui.
+          {{ t('orders.emptyDesc') }}
         </p>
 
       </div>
@@ -246,7 +248,7 @@ const updateStatus = async (status) => {
         <!-- CARREGANDO -->
 
         <div v-if="loadingDetails" class="modal-loading">
-          Carregando pedido...
+          {{ t('orders.details.loading') }}
         </div>
 
         <!-- DETALHES -->
@@ -258,7 +260,7 @@ const updateStatus = async (status) => {
             <div>
 
               <span class="modal-label">
-                PEDIDO
+                {{ t('orders.details.subject') }}
               </span>
 
               <h2>
@@ -278,34 +280,34 @@ const updateStatus = async (status) => {
           <section class="details-section">
 
             <h3>
-              Cliente
+              {{ t('orders.details.customer') }}
             </h3>
 
             <div class="customer-info">
 
               <div>
-                <span>Nome</span>
+                <span>{{ t('orders.details.name') }}</span>
                 <strong>
                   {{ selectedOrder.customerName }}
                 </strong>
               </div>
 
               <div>
-                <span>Telefone</span>
+                <span>{{ t('orders.details.phone') }}</span>
                 <strong>
                   {{ selectedOrder.customerPhone || '—' }}
                 </strong>
               </div>
 
               <div>
-                <span>E-mail</span>
+                <span>{{ t('orders.details.email') }}</span>
                 <strong>
                   {{ selectedOrder.customerEmail || '—' }}
                 </strong>
               </div>
 
               <div>
-                <span>Data</span>
+                <span>{{ t('orders.details.date') }}</span>
                 <strong>
                   {{ formatDate(selectedOrder.createdAt) }}
                 </strong>
@@ -320,7 +322,7 @@ const updateStatus = async (status) => {
           <section class="details-section">
 
             <h3>
-              Status
+              {{ t('orders.details.status') }}
             </h3>
 
             <span class="status" :class="getStatusClass(selectedOrder.status)">
@@ -331,17 +333,17 @@ const updateStatus = async (status) => {
 
               <button v-if="selectedOrder.status === 'PENDING'" class="approve-button" :disabled="updatingStatus"
                 @click="updateStatus('APPROVED')">
-                Aprovar pedido
+                {{ t('orders.details.approve') }}
               </button>
 
               <button v-if="selectedOrder.status === 'PENDING'" class="reject-button" :disabled="updatingStatus"
                 @click="updateStatus('REJECTED')">
-                Rejeitar
+                {{ t('orders.details.reject') }}
               </button>
 
               <button v-if="selectedOrder.status === 'APPROVED'" class="complete-button" :disabled="updatingStatus"
                 @click="updateStatus('COMPLETED')">
-                Marcar como concluído
+                {{ t('orders.details.complete') }}
               </button>
 
             </div>
@@ -353,7 +355,7 @@ const updateStatus = async (status) => {
           <section class="details-section">
 
             <h3>
-              Produtos
+              {{ t('orders.details.products') }}
             </h3>
 
             <div class="products-list">
@@ -391,7 +393,7 @@ const updateStatus = async (status) => {
           <section v-if="selectedOrder.notes" class="details-section">
 
             <h3>
-              Observação
+              {{ t('orders.details.notes') }}
             </h3>
 
             <p class="notes">
@@ -403,7 +405,7 @@ const updateStatus = async (status) => {
           <div class="modal-footer">
 
             <button class="close-modal-button" @click="closeOrder">
-              Fechar
+              {{ t('actions.close') }}
             </button>
 
           </div>
@@ -420,6 +422,7 @@ const updateStatus = async (status) => {
 <style scoped>
 .orders-page {
   width: 100%;
+  max-width: 100%;
 }
 
 .page-header {
@@ -492,8 +495,8 @@ td strong {
 }
 
 .details-button:hover {
-  border-color: #155c5c;
-  color: #155c5c;
+  border-color: #16a34a;
+  color: #16a34a;
 }
 
 /* STATUS */
@@ -758,7 +761,7 @@ td strong {
 }
 
 .product-price {
-  color: #155c5c;
+  color: #16a34a;
   font-weight: 600;
 }
 
@@ -804,6 +807,64 @@ td strong {
 
 @media (max-width: 700px) {
 
+  .orders-info {
+    padding: 12px 16px;
+  }
+
+  .orders-table {
+    overflow: visible;
+  }
+
+  .orders-table table,
+  .orders-table thead,
+  .orders-table tbody {
+    display: block;
+    width: 100%;
+  }
+
+  .orders-table thead {
+    display: none;
+  }
+
+  .orders-table tr {
+    display: grid;
+    grid-template-columns: 1fr;
+    min-width: 0;
+    width: 100%;
+    gap: 12px;
+    padding: 14px 16px;
+    border-top: 1px solid #e5e7eb;
+  }
+
+  .orders-table td {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 0;
+    border-top: none;
+    text-align: right;
+    min-width: 0;
+  }
+
+  .orders-table td[data-label]::before {
+    content: attr(data-label);
+    font-size: 12px;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    flex-shrink: 0;
+  }
+
+  .orders-table td > * {
+    min-width: 0;
+  }
+
+  .orders-table td:first-child {
+    justify-content: flex-start;
+    text-align: left;
+  }
+
   .customer-info {
     grid-template-columns: 1fr;
   }
@@ -817,11 +878,35 @@ td strong {
   }
 
   .modal-overlay {
-    padding: 10px;
+    padding: 0;
+    align-items: stretch;
   }
 
   .modal {
-    max-height: 95vh;
+    width: 100%;
+    height: 100vh;
+    max-height: none;
+    border-radius: 0;
+  }
+
+  .modal-header {
+    padding: 18px;
+  }
+
+  .details-section {
+    padding: 18px;
+  }
+
+  .status-actions {
+    flex-direction: column;
+  }
+
+  .status-actions button {
+    width: 100%;
+  }
+
+  .modal-footer {
+    padding: 16px 18px;
   }
 
 }
