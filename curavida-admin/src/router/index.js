@@ -8,8 +8,22 @@ const router = createRouter({
 
   routes: [
     {
+      path: '/login',
+      name: 'login',
+      component: () => import('../views/LoginView.vue'),
+      meta: {
+        guest: true,
+      },
+    },
+
+    {
       path: '/',
       component: AdminLayout,
+
+      meta: {
+        requiresAuth: true,
+      },
+
       children: [
         {
           path: '',
@@ -28,14 +42,33 @@ const router = createRouter({
           name: 'pedidos',
           component: () => import('../views/OrdersView.vue'),
         },
+
         {
-          path: '/categorias',
+          path: 'categorias',
           name: 'categorias',
           component: CategoriesView,
-        }
+        },
       ],
     },
   ],
+})
+
+router.beforeEach((to) => {
+  const token = localStorage.getItem(
+    'curavida-admin-token',
+  )
+
+  if (to.meta.requiresAuth && !token) {
+    return {
+      name: 'login',
+    }
+  }
+
+  if (to.meta.guest && token) {
+    return {
+      name: 'dashboard',
+    }
+  }
 })
 
 export default router
